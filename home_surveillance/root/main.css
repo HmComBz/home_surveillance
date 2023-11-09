@@ -1,0 +1,440 @@
+body {
+  background: url("/static/img/norway2.jpg") no-repeat center fixed;
+  background-size: cover;
+}
+
+#main-body-container {
+  z-index: 2;
+  background-color: rgba(255,255,255,0.4);
+  width: 100%;
+  border-radius: 25px;
+}
+
+.main-div {
+  z-index: 2;
+}
+
+a {
+  font-size: 18px;
+}
+
+h1 {
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+h3 {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 22px;
+}
+
+h4 {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 18px;
+}
+
+p {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 17px;
+}
+
+/* All pages */
+/* ------------------------------------------------------------------------------------ */
+#domain-year-footer {
+  color: #fff;
+}
+
+#navbar-main li{
+  font-size: 17px;
+}
+
+.nav-link{
+  font-size: 20px;
+}
+
+.jumbotron {
+  background-color: rgba(248,249,250,0.7);
+  border-radius: 25px;
+  margin-top: 50px;
+}
+
+/* Home page */
+/* ------------------------------------------------------------------------------------ */
+#home-page-info-box {
+  background-color: rgba(248,249,250,0.7);
+  border-radius: 25px;
+}
+
+.card-table-performance {
+  width: 100%;
+  border-top: 1px solid #000;
+  font-size: 18px;
+}
+
+.card-table-performance td{
+  width: 20%;
+  text-align: center;
+}
+
+.login-box-header {
+  width: 200px;
+  color: #ffffff;
+}
+
+#home-row {
+  margin-top: 40px;
+  background-color: rgba(248,249,250,0.7);
+  padding: 20px;
+  border-radius: 25px;
+}
+
+.col-home {
+  width: 32%;
+  margin: 0.5%;
+}
+
+@media screen and (max-width: 1000px) {
+  .col-home {
+    width: 100%;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+}
+
+/* Cameras */
+/* ------------------------------------------------------------------------------------ */
+.camera-actions-box {
+  margin-top: 40px;
+  background-color: rgba(248,249,250,0.7);
+  border-radius: 25px;
+  width: 100%;
+  height: 70px;
+}
+
+.camera-actions-button-box {
+  padding: 10px;
+  text-align: center;
+  float: left;
+}
+
+.camera-actions-button-box-right {
+  padding-top: 10px;
+  height: 70px;
+  text-align: center;
+  float: right;
+  margin-right: 5px;
+}
+
+.cameras-main-box {
+  margin-top: 60px;
+}
+
+.cameras-sub-box {
+  height: 250px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#cameras-content-header {
+  background-color: rgba(248,249,250,0.7);
+  padding: 10px;
+  border-radius: 25px;
+  height: 40px;
+  width: 100%;
+}
+
+.cameras-header-left {
+  padding-left: 10px;
+  text-align: left;
+  margin-right: 5px;
+  width: 30%;
+}
+
+.cameras-header-center {
+  text-align: center;
+  width: 20%;
+}
+
+.cameras-header-right {
+  text-align: center;
+  width: 48%;
+}
+
+#cameras-content-row {
+  margin-top: 10px;
+  background-color: rgba(248,249,250,0.7);
+  padding: 10px;
+  border-radius: 25px;
+  height: 70px;
+  width: 100%;
+}
+
+.cameras-name {
+  padding-top: 10px;
+  padding: 10px;
+  float: left;
+  margin-right: 5px;
+  width: 30%;
+}
+
+.cameras-status {
+  text-align: center;
+  margin-right: 5px;
+  width: 20%;
+}
+
+.cameras-buttons {
+  height: 70px;
+  display: inline-block;
+  text-align: right;
+  width: 48%;
+}
+
+.cameras-buttons-button {
+  text-align: right;
+  float: right;
+  margin-left: 5px;
+}
+
+.btn-info, .btn-info:hover, .btn-info:active, .btn-info:visited {
+  background-color: #819DCB !important;
+  border: None;
+}
+
+.btn-success, .btn-success:hover, .btn-success:active, .btn-success:visited {
+  background-color: #4C6A95 !important;
+  border: None;
+}
+
+.btn-danger, .btn-danger:hover, .btn-danger:active, .btn-danger:visited {
+  background-color: #32527B !important;
+  border: None;
+}
+
+@media screen and (max-width: 800px) {
+  .col-cameras {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+.video-stream-box {
+  margin-top: 40px;
+  background-color: rgba(248,249,250,0.7);
+  border-radius: 25px;
+  width: 100%;
+  height: 600px;
+}
+
+.video-stream-sub-box {
+  padding: 10px;
+  text-align: center;
+  float: left;
+}
+
+/* Login */
+/* ------------------------------------------------------------------------------------ */
+#login-content-row {
+  margin-top: 40px;
+  background-color: rgba(248,249,250,0.7);
+  padding: 20px;
+  border-radius: 25px;
+}
+
+.col-login {
+  width: 50%;
+}
+
+@media screen and (max-width: 800px) {
+  .col-login {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+/* Portfolio */
+/* ------------------------------------------------------------------------------------ */
+* {
+  box-sizing: border-box;
+}
+
+/* Float four columns side by side */
+.kpi-column {
+  float: left;
+  width: 20%;
+  padding: 0 10px;
+}
+
+/* Remove extra left and right margins, due to padding in columns */
+.kpi-row {
+  margin: 0 -5px;
+  padding: 5px;
+  border-radius: 25px;
+  background-color: rgba(248,249,250,0.9);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Clear floats after the columns */
+.kpi-row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the counter cards */
+.kpi-card {
+  padding: 5%;
+  text-align: center;
+  background-color: rgba(248,249,250,0.9);
+  height: 120px;
+}
+
+.kpi-card-text {
+  width: 100%;
+  height: 50%;
+}
+
+.kpi-card-text p {
+  font-size: 1em;
+}
+
+.kpi-card-text h4 {
+  font-size: 1.0em;
+}
+
+@media screen and (max-width: 800px) {
+  .kpi-column {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+/* Buttons on different time frames */
+.visual-box-portfolio {
+  background-color: rgba(248,249,250,0.7);
+  border-radius: 25px;
+}
+
+.visual-box-row-cards {
+  background-color: rgba(248,249,250,0.7);
+  margin: 5 0px;
+  content: "";
+  display: table;
+  clear: both;
+  padding-top: 20px;
+  padding-bottom: 50px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-radius: 25px;
+  width: 100%;
+  text-align: center;
+}
+
+#visual-box-buttons {
+  margin-bottom: 30px;
+  border-radius: 25px;
+  height: 60px;
+  width: 20%;
+  text-align: center;
+  float: left;
+}
+
+@media screen and (max-width: 800px) {
+  #visual-box-buttons {
+    width: 90%;
+    display: inline-block;
+    margin-left: 5%;
+    margin-bottom: 5px;
+  }
+}
+
+.visual-box-portfolio-button {
+  background-color: rgba(65,103,165,0.5);
+  color: #fff;
+  width: 98%;
+  margin-left: 1%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 20px;
+  
+}
+
+.visual-box-portfolio-button:hover {
+  background-color: #666;
+  color: white;
+}
+
+.visual-total-portfolio-graph {
+  margin-top: 50px;
+}
+
+@media screen and (max-width: 800px) {
+  .visual-total-portfolio-graph {
+    width: 80%;
+    display: inline-block;
+    margin-top: 5px;
+  }
+}
+
+.active {
+  background-color: #666;
+  color: white;
+}
+
+.visual-box-row-graphs {
+  margin: 5 5px;
+  padding: 5px;
+  border-radius: 25px;
+  background-color: rgba(248,249,250,0.7);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* ABOUT US */
+
+.about-me-box {
+  margin-bottom: 40px;
+  background-color: rgba(248,249,250,0.7);
+  padding: 20px;
+  border-radius: 25px;
+}
+
+.about-us-image {
+  max-width: 390px;
+  width: 100%;
+  height: auto;
+  margin: auto;
+  display: block;
+  float: left;
+}
+
+#about-us-content-row {
+  margin-top: 40px;
+  background-color: rgba(248,249,250,0.7);
+  padding: 20px;
+  border-radius: 25px;
+}
+
+.about-us-text-box {
+  border-radius: 25px;
+}
+
+.about-us-box {
+  margin: 20px;
+}
+
+.col-about-us {
+  width: 33.3%;
+}
+
+@media screen and (max-width: 800px) {
+  .col-about-us {
+    width: 100%;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+}

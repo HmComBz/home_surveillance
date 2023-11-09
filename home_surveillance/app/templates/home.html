@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %} Kameror {% endblock %}
+
+{% block content %}
+
+<main role="main">
+    <div class="main-div">
+        <div class="jumbotron">
+            <div class="container">
+                <h1 class="display-3">Hem</h1>
+                <p>Här konfigurerar du dina kameror. Du kan både lätta till och ta bort kameror. Möjlighet finns även att schemalägga
+                    larm vid behov.
+                </p>
+                <div class="camera-actions-box">
+                    <div class="camera-actions-button-box">
+                        <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off' %}" role="button">Lägg till &raquo;</a></p>
+                    </div>
+                    <div class="camera-actions-button-box-right">
+                        <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off' %}" role="button">Schemalägg</a></p>
+                    </div>
+                    <div class="camera-actions-button-box-right">
+                        {% if view == 0 %}
+                            <p><a class="btn btn-info btn-lg" href="{% url 'manage_system' task='start' %}" role="button">Starta &raquo;</a></p>
+                        {% else %}
+                            <p><a class="btn btn-secondary btn-lg" href="{% url 'manage_system' task='stop' %}" role="button">Stoppa</a></p>
+                        {% endif %}
+                    </div> 
+                </div>
+                <div class="cameras-main-box">
+                    <div class="row gx-5" id="cameras-content-header">
+                        <div class="cameras-header-left"><h3>Kamera</h3></div>
+                        <div class="cameras-header-center"><h3>Status</h3></div>
+                        <div class="cameras-header-right"><h3>Alternativ</h3></div>
+                    </div>
+                    <div class="cameras-sub-box">
+                        {% for c in data %}
+                        <div class="row gx-5" id="cameras-content-row">
+                            <div class="cameras-name">
+                                <p><b>{{c.camera_name}}</b></p>
+                            </div>
+                            <div class="cameras-status">
+                                {% if c.detection_status == 0 %}
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Aktiverad</a></p>
+                                {% else %}
+                                    <p><a class="btn btn-secondary btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Inaktivera</a></p>
+                                {% endif %}
+                            </div> 
+                            <div class="cameras-buttons">
+                                <div class="cameras-buttons-button">
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button">Ta bort</a></p>
+                            </div>                                
+                                <div class="cameras-buttons-button">
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button">&#9881;</a></p>
+                                </div>
+                                <div class="cameras-buttons-button">
+                                {% if c.selected_status == 0 %}
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Visa &raquo;</a></p>
+                                {% else %}
+                                    <p><a class="btn btn-secondary btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Vald &raquo;</a></p>
+                                {% endif %}
+                            </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="video-stream-box">
+                    <div class="video-stream-sub-box">
+                        <img src="{% url 'camera' camera_id=selected_camera %}" id="camera_rtsp" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+{% endblock content %}
