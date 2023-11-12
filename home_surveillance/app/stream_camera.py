@@ -200,9 +200,8 @@ def view_camera(request, camera_id):
             events = sel.select(timeout=1)
             for key, mask in events:
                 message = key.data
-                message.process_events(mask)
                 try:
-                    pass
+                    message.process_events(mask)
                 except Exception as e:
                     logger.error("Failed to send message to handle camera due to: %s" % e)
                     message.close()
@@ -251,9 +250,8 @@ def manage_system(request, task):
             events = sel.select(timeout=1)
             for key, mask in events:
                 message = key.data
-                message.process_events(mask)
                 try:
-                    pass
+                    message.process_events(mask)
                 except Exception as e:
                     logger.error("Failed to send message to handle camera due to: %s" % e)
                     message.close()
@@ -268,4 +266,4 @@ def manage_system(request, task):
     # Create a dictionary of cameras to create camera list at home view
     camera_data = import_camera_list(current_user)
     
-    return render(request, "home.html", {"selected_camera":selected_camera, "view":system_status, "data":camera_data})
+    return render(request, "home.html", {"selected_camera":selected_camera, "system_status":system_status, "data":camera_data})

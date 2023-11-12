@@ -16,13 +16,13 @@
                 </p>
                 <div class="camera-actions-box">
                     <div class="camera-actions-button-box">
-                        <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off'%}" role="button">Lägg till &raquo;</a></p>
+                        <p><a class="btn btn-info btn-lg" href="{% url 'home' %}" role="button">Lägg till &raquo;</a></p>
                     </div>
                     <div class="camera-actions-button-box-right">
                         {% if view == "off" %}
-                            <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off'%}" role="button">Starta &raquo;</a></p>
+                            <p><a class="btn btn-info btn-lg" href="{% url 'home' %}" role="button">Starta &raquo;</a></p>
                         {% else %}
-                            <p><a class="btn btn-secondary btn-lg" href="{% url 'home' view='off'%}" role="button">Stoppa &raquo;</a></p>
+                            <p><a class="btn btn-secondary btn-lg" href="{% url 'home' %}" role="button">Stoppa &raquo;</a></p>
                         {% endif %}
                     </div>
                 </div>
@@ -50,13 +50,13 @@
                             </div> 
                             <div class="alarm-buttons">
                                 <div class="alarm-buttons-button">
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button"><i class="material-icons">&#xe872;</i></a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button"><i class="material-icons">&#xe872;</i></a></p>
                                </div>                                
                                 <div class="alarm-buttons-button">
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button"><i class="fa fa-download"></i></a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button"><i class="fa fa-download"></i></a></p>
                                 </div>
                                 <div class="alarm-buttons-button">
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button">Visa &raquo;</a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button">Visa &raquo;</a></p>
                                </div>
                             </div>
                         </div>

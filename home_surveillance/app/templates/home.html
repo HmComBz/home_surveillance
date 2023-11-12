@@ -16,13 +16,13 @@
                 </p>
                 <div class="camera-actions-box">
                     <div class="camera-actions-button-box">
-                        <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off' %}" role="button">Lägg till &raquo;</a></p>
+                        <p><a class="btn btn-info btn-lg" href="{% url 'home' %}" role="button">Lägg till &raquo;</a></p>
                     </div>
                     <div class="camera-actions-button-box-right">
-                        <p><a class="btn btn-info btn-lg" href="{% url 'home' view='off' %}" role="button">Schemalägg</a></p>
+                        <p><a class="btn btn-info btn-lg" href="{% url 'home' %}" role="button">Schemalägg</a></p>
                     </div>
                     <div class="camera-actions-button-box-right">
-                        {% if view == 0 %}
+                        {% if system_status == 0 %}
                             <p><a class="btn btn-info btn-lg" href="{% url 'manage_system' task='start' %}" role="button">Starta &raquo;</a></p>
                         {% else %}
                             <p><a class="btn btn-secondary btn-lg" href="{% url 'manage_system' task='stop' %}" role="button">Stoppa</a></p>
@@ -50,10 +50,10 @@
                             </div> 
                             <div class="cameras-buttons">
                                 <div class="cameras-buttons-button">
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button">Ta bort</a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button">Ta bort</a></p>
                             </div>                                
                                 <div class="cameras-buttons-button">
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' view='off'%}" role="button">&#9881;</a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button">&#9881;</a></p>
                                 </div>
                                 <div class="cameras-buttons-button">
                                 {% if c.selected_status == 0 %}
@@ -69,7 +69,10 @@
                 </div>
                 <div class="video-stream-box">
                     <div class="video-stream-sub-box">
-                        <img src="{% url 'camera' camera_id=selected_camera %}" id="camera_rtsp" onerror="this.style.display='none'">
+                        {% if selected_camera|length > 0 %}
+                            <img src="{% url 'camera' camera_id=selected_camera %}" id="camera_rtsp" onerror="this.style.display='none'">
+                        {% else %}
+                        {% endif %}
                     </div>
                 </div>
             </div>

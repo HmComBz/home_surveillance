@@ -33,7 +33,7 @@
                 <ul class="navbar-nav mr-auto">
                     {% url 'home' as url %}
                     <li class="nav-item {% if request.path == url %}active{% endif %}">
-                        <a class="nav-link" href="{% url 'home' view='off'%}">Hem</a>
+                        <a class="nav-link" href="{% url 'main' %}">Hem</a>
                     </li>
                     {% url 'history' as url %}
                     <li class="nav-item {% if request.path == url %}active{% endif %}">

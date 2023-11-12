@@ -1,6 +1,7 @@
 import base64
 import cv2
 import logging
+import multiprocessing as mp
 import socket
 import time
 import zmq
@@ -27,12 +28,16 @@ consoleHandler.setFormatter(formatter)
 
 
 class Camera(Thread):
-    def __init__(self, camera_id):
+    def __init__(self, parent, user_id, camera_id):
         Thread.__init__(self, name=("Camera-%s" % camera_id))
         self.camera_id = camera_id
         self.camera_data = self.import_camera_data_from_sql()
+        self.img_x = 920
+        self.img_y = 600
         self.rtsp = self.generate_rtsp()
         self.fps_limit = 4
+        self.parent = parent
+        self.user_id = user_id
         self.web_port = self.camera_data["web_socket"]
         self.status = 1
 
@@ -147,7 +152,7 @@ class Camera(Thread):
                     try:
                         # Resize image and sent it through the socket
                         if self.status == 1:
-                            new_image = self.resize_image(self.frame, 920, 700)
+                            new_image = self.resize_image(self.frame, self.img_x, self.img_y)
                             self.send_image_through_socket(new_image)
                     except Exception as e:
                         logger.error("Camera %s: No analyzed image was recieved under main loop: %s" % (self.camera_id, e))
@@ -159,3 +164,7 @@ class Camera(Thread):
         encoded, buffer = cv2.imencode('.jpg', image)
         jpg_as_text = base64.b64encode(buffer)
         self.footage_socket.send(jpg_as_text)
+
+    #---------------------------------------------------------------------------
+    def stop(self):
+        self.stopped = True

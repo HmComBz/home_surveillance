@@ -26,6 +26,29 @@ class MysqlConnection():
                                       host=host,
                                       database=db)
         return cnx
+    
+    #---------------------------------------------------------------------------
+    def custom_query_data(self, query):
+        ''' Query data from database '''
+  
+        # Create cursor object
+        cnx = self.create_connection()
+        cursor = cnx.cursor()
+
+        # Execute
+        cursor.execute(query)
+
+        # Get results
+        results = []
+        for row in cursor:
+            results.append(row)
+
+        # Close connection
+        cnx.commit()
+        cursor.close()
+        cnx.close()
+
+        return results
 
     #---------------------------------------------------------------------------
     def example_strings(self):
@@ -195,7 +218,7 @@ class MysqlConnection():
                     data_tuple.append(w[1])
 
         # Add final
-        #query += ";"
+        query += ";"
 
         # Execute
         cursor.execute(query, data_tuple)

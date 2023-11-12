@@ -2,10 +2,12 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 from app import stream_camera
 
 urlpatterns = [
-    path("home/<view>/", views.home, name="home"),
+    path('', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path("main", views.main, name="main"),
     path("history/<view>/", views.history, name="history"),
     path("about", views.about, name="about"),
 
