@@ -84,7 +84,8 @@ def check_if_port_is_used(ip, port: int) -> bool:
     ''' Check if the port is beeing used '''
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex((ip, port)) == 0
+        if s.connect_ex((ip, port)) == 0:
+            s.close()
 
 #-------------------------------------------------------------------------------
 def create_new_socket(camera_id):
@@ -94,17 +95,20 @@ def create_new_socket(camera_id):
     port = DimCameras.objects.get(id=camera_id).web_socket
     logger.info("Creating a connection for camera %s and port %s." % (camera_id, port))
 
-    try:
-        # Create the connection to recieve video stream
-        context = zmq.Context()
-        footage_socket = context.socket(zmq.SUB)
-        footage_socket.setsockopt(socket.SO_REUSEADDR, 1)
-        footage_socket.bind('tcp://*:%s' % port)
-        footage_socket.setsockopt_string(zmq.SUBSCRIBE, "")
-        return footage_socket
-    except Exception as e:
-        logger.error("Failed to create socket on client side: %s" % e)
-        time.sleep(10)
+    # Check if port beeing used
+    check_if_port_is_used(IP_ADRESS, port)
+
+    for i in range(0,3):
+        try:
+            # Create the connection to recieve video stream
+            context = zmq.Context()
+            footage_socket = context.socket(zmq.SUB)
+            footage_socket.setsockopt(socket.SO_REUSEADDR, 1)
+            footage_socket.bind('tcp://*:%s' % port)
+            footage_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+            return footage_socket
+        except Exception as e:
+            logger.error("Failed to create socket on client side: %s" % e)
 
 #-------------------------------------------------------------------------------
 def gen(camera_id):
@@ -216,7 +220,7 @@ def view_camera(request, camera_id):
     # Create a dictionary of cameras to create camera list at home view
     data = import_camera_list(current_user)
 
-    return render(request, "home.html", {"selected_camera":camera_id, "view":system_status, "data":data})
+    return render(request, "home.html", {"selected_camera":camera_id, "system_status":system_status, "data":data})
     
 #------------------------------------------------------------------------------
 def manage_system(request, task):
@@ -232,7 +236,7 @@ def manage_system(request, task):
         system_status = update_system_status(current_user, 0)
         
     # Loop through cameras and create messages
-    selected_camera = DimCameras.objects.get(user_id=current_user, selected_status=1).id
+    selected_camera = str(DimCameras.objects.get(user_id=current_user, selected_status=1).id)
     messages = []
     cameras = DimCameras.objects.filter(user_id=current_user, detection_status=1).values_list("id")
     for cam in cameras:

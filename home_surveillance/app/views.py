@@ -20,7 +20,7 @@ def main(request):
                      "detection_status":camera.detection_status, "selected_status":camera.selected_status}
         data.append(temp_dict)
         if camera.selected_status == 1:
-            selected_camera = camera.id
+            selected_camera = str(camera.id)
     return render(request, "home.html", {"selected_camera":selected_camera, "system_status":system_status, "data":data})
 
 @login_required
