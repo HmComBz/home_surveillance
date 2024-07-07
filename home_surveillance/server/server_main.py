@@ -4,6 +4,7 @@ import selectors
 import socket
 import sys
 import time
+import multiprocessing as mp
 from worker import Worker
 from home_surveillance.server.mysql_conn import MysqlConnection
 
@@ -23,14 +24,15 @@ logger.addHandler(consoleHandler)
 formatter = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s')
 consoleHandler.setFormatter(formatter)
 
-    
+
 ####################################################################################
 # Server class
 ####################################################################################
 class Server():
     def __init__(self):
         self.active_camera_id = None
-        self.camera_streams = {}
+        self.camera_workers = {}
+        self.camera_queues = {}
         self.host = "192.168.0.135"
         self.port = 8080
         self.stopped = False
@@ -56,28 +58,29 @@ class Server():
         if status == False:
             try:
                 self.active_camera_id = camera_id
-                self.camera_streams[camera_id] = Worker(user_id, camera_id)
-                self.camera_streams[camera_id].daemon = True
-                self.camera_streams[camera_id].start()
-                logger.info("Camera %s started." % camera_id)
+                self.camera_queues[camera_id] = mp.Queue()
+                self.camera_workers[camera_id] = Worker(user_id, camera_id, self.camera_queues[camera_id])
+                self.camera_workers[camera_id].daemon = True
+                self.camera_workers[camera_id].start()
             except Exception as e:
-                logger.error("Camera %s failed to start due to: %s" % (camera_id, e))
+                logger.error("Camera %s failed to start for user %s due to: %s" % (camera_id, user_id, e))
         else:
-            logger.info("Camera %s is already active, changing view." % camera_id)
+            logger.info("Camera %s is already active." % camera_id)
+
 
     #-------------------------------------------------------------------------------
     def check_if_camera_exists(self, camera_id):
         ''' Check if camera is allready active '''
 
         try:
-            if camera_id in self.camera_streams.keys():
+            if camera_id in self.camera_workers.keys():
                 return True
             else:
                 return False
         except Exception as e:
             logger.error("Check if camera is active failed: %s" % e)
             return False
-        
+
     #-------------------------------------------------------------------------------
     def convert_tuple_to_string(self, tuple):
         return "(" + ",".join(tuple) + ")"
@@ -87,10 +90,8 @@ class Server():
         ''' Close active camera '''
 
         try:
-            self.camera_streams[camera_id].stop_queue.put(True)
-            self.camera_streams[camera_id].stopped = True
-            self.camera_streams[camera_id].join()
-            del self.camera_streams[camera_id]  
+            self.camera_queues[camera_id].put("stop")
+            logger.info("Camera %s closed successfully." % camera_id)
         except Exception as e:
             logger.error("Camera %s failed to stop due to: %s" % (camera_id, e))
 
@@ -111,6 +112,13 @@ class Server():
         except Exception as e:
             logger.error("Failed to create socket due to: %s" % e)
 
+    #--------------------------------------------------------------------------------
+    def create_user_camera_dict(self, user_list):
+        user_dict = {}
+        for user in user_list:
+            user_dict[user] = []
+        return user_dict
+
     #-------------------------------------------------------------------------------
     def first_startup_check(self):
         ''' Check if system is set to active '''
@@ -119,31 +127,47 @@ class Server():
         user_list = self.get_users_with_system_active()
 
         # Import camera data
-        if user_list != None:
-            camera_list = self.get_active_camera_list(user_list)
+        if len(user_list) > 0:
+            user_camera_dict = self.import_user_camera_data(user_list)
 
-        # Start cameras
-        for camera_id in camera_list:
-            self.add_new_stream(camera_id)
+            # Start cameras
+            for user_id in user_camera_dict:
+                for camera_id in user_camera_dict[user_id]:
+                    logger.info("At startup: Starting camera %s for user %s." % (camera_id, user_id))
+                    self.add_new_stream(user_id, camera_id)
 
     #-------------------------------------------------------------------------------
-    def get_active_camera_list(self, user_list):
+    def get_camera_selection_status(self, camera_id):
+        ''' Check if camera is selected to be shown '''
+
+        query = """ SELECT system_status FROM app_dimcameras
+                    WHERE camera_id = %s;
+                """ % camera_id
+        try:
+            return MysqlConnection().custom_query_data(query)[0]
+        except Exception as e:
+            logger.error("Unable to import active user list from MySQL: %s" % e)
+
+    #-------------------------------------------------------------------------------
+    def import_user_camera_data(self, user_list):
         ''' Get a list of all cameras with active status for all users with active system '''
 
         str_tuple = self.convert_tuple_to_string(user_list)
-        query = """ SELECT id FROM app_dimcameras 
+        query = """ SELECT id, user_id FROM app_dimcameras
                     WHERE user_id IN %s
                     AND detection_status = 1;
                 """ % str_tuple
+
+        user_dict = self.create_user_camera_dict(user_list)
         try:
             results = MysqlConnection().custom_query_data(query)
-            list_of_cameras = []
             for r in results:
-                list_of_cameras.append(str(r[0]))
-            return list_of_cameras
+                user_dict[str(r[1])].append(str(r[0]))
+            return user_dict
         except Exception as e:
             logger.error("Unable to import active camera list from MySQL: %s" % e)
-    
+            return user_dict
+
     #-------------------------------------------------------------------------------
     def get_users_with_system_active(self):
         ''' Import complete list of users that has system_status set to 1 '''
@@ -170,14 +194,28 @@ class Server():
             table = "app_dimcameras"
             where_statements = [("selected_status", 1)]
             camera = MysqlConnection().query_data(columns, table, where_statements)[0]
-            return camera["id"]    
+            return camera["id"]
         except Exception as e:
             logger.error("Failed to import selected status from sql: %s" % e)
             return False
-    
+
+    #-------------------------------------------------------------------------------
+    def reset_active_camera_settings(self):
+        ''' Set all statuses to non active of all cameras '''
+
+        try:
+            camera_list = list(self.camera_workers.keys())
+            for camera_id in camera_list:
+                self.camera_queues[camera_id].put("inactivate")
+        except Exception as e:
+            logger.error("Failed to reset active camera statuses due to: %s" % e)
+
     #-------------------------------------------------------------------------------
     def run(self):
         ''' Main server script '''
+
+        # Check if system is set to active
+        self.first_startup_check()
 
         # Create a socket
         sel = self.create_socket()
@@ -193,21 +231,54 @@ class Server():
                         try:
                             message.process_events(mask)
                             msg = message.request.decode('utf-8')
-                            msg_list = msg.split("|")
-                            for m in msg_list:
-                                action, current_user, camera_id = m.split('-')
-                                if action == "start": 
-                                    self.add_new_stream(current_user, camera_id)
-                                elif action == "stop":
-                                    self.close_old_stream(camera_id)
+                            logger.info("Messsage recieved from client: %s" % msg)
+                            # View function, action/camera_id, user_id
+                            category, selection, current_user = msg.split('-')
+                            if category == "view":
+                                camera_status = self.check_if_camera_exists(selection)
+                                if camera_status == False:
+                                    self.add_new_stream(current_user, selection)
+                                self.reset_active_camera_settings()
+                                self.camera_queues[selection].put("activate")
+                                message.close()
+                            elif category == "manage":
+                                if selection == "start":
+                                    self.start_system(current_user)
+                                    message.close()
+                                elif selection == "stop":
+                                    self.stop_system(current_user)
                                     self.update_system_status(0, current_user)
+                                    message.close()
                         except Exception as e:
                             logger.error("Error in retrieving message for starting cameras due to: %s" % e)
                             message.close()
+        except Exception as e:
+            logger.error("Server main script failed due to: %s" % e)
         except KeyboardInterrupt:
             logger.error("Caught keyboard interrupt, exiting.")
         finally:
             sel.close()
+
+    #-------------------------------------------------------------------------------
+    def start_system(self, user_id):
+        ''' When user presses the start button, start all cameras with status active'''
+
+        # Import camera data
+        user_camera_dict = self.import_user_camera_data([user_id])
+
+        # Start cameras
+        for camera_id in user_camera_dict[user_id]:
+            self.add_new_stream(user_id, camera_id)
+
+    #-------------------------------------------------------------------------------
+    def stop_system(self, user_id):
+        ''' When user presses the stop button, stop all cameras with status active'''
+
+        # Import camera data
+        user_camera_dict = self.import_user_camera_data([user_id])
+        # Stop cameras
+        for camera_id in user_camera_dict[user_id]:
+            self.close_old_stream(camera_id)
 
     #-------------------------------------------------------------------------------
     def update_system_status(self, system_status, user_id):

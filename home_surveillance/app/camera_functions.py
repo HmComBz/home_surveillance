@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import time
 import base64
 import random
@@ -7,14 +8,14 @@ import selectors
 import traceback
 import types
 import zmq
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http.response import HttpResponse, StreamingHttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse, StreamingHttpResponse
 from .models import DimCameras, DimPerson
 from server.libclient import Message
 
 # Create loggers for code
-logger = logging.getLogger("select_camera")
+logger = logging.getLogger("camera_functions")
 logger.setLevel(logging.INFO)
 logger.propagate = False
 
@@ -83,9 +84,14 @@ def create_socket_connection(request):
 def check_if_port_is_used(ip, port: int) -> bool:
     ''' Check if the port is beeing used '''
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        if s.connect_ex((ip, port)) == 0:
-            s.close()
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex((ip, port)) == 0:
+                s.shutdown(socket.SHUT_RDWR)
+                s.close()
+                logger.info("Port %s was closed for %s" % (port, ip))
+    except Exception as e:
+        logger.error("The check if port is beeing used failed for port %s: %s" % (port, e))
 
 #-------------------------------------------------------------------------------
 def create_new_socket(camera_id):
@@ -148,7 +154,7 @@ def gen(camera_id):
 #-------------------------------------------------------------------------------
 def update_system_status(user_id, value):
     ''' Update system status '''
-    
+
     try:
         person = DimPerson.objects.get(user_id=user_id)
         person.system_status = value
@@ -158,116 +164,3 @@ def update_system_status(user_id, value):
     except Exception as e:
         logger.error("Failed to update system status due to: %s" % e)
         return 0
-
-
-################################################################################
-# View functions
-################################################################################
-def camera(request, camera_id):
-    ''' Function for creating StreamingHttpResponse for camera 1. '''
-
-    try:
-        # Create streaming object for selected camera     
-        return StreamingHttpResponse(gen(camera_id),
-                    content_type='multipart/x-mixed-replace; boundary=frame')
-    except Exception as e:
-        logger.error("Camera stream failed due to: %s" % e)
-        return HttpResponse(False, content_type='text/plain')
-    
-#------------------------------------------------------------------------------
-def view_camera(request, camera_id):
-    ''' Communicating with server script to start cameras based on user selections '''
-
-    # Current user
-    current_user = request.user.id
-
-    # Get system status
-    system_status = DimPerson.objects.get(user_id=current_user).system_status
-
-    # Update camera status in database
-    camera_list = DimCameras.objects.filter(user_id=current_user)
-    id_list = [camera.id for camera in camera_list]
-    DimCameras.objects.filter(id__in=id_list).update(selected_status=0)
-    camera = DimCameras.objects.get(id=camera_id)
-    camera.selected_status = 1
-    camera.save()
-
-    # Start connection
-    msg = str("start") + "-" + str(current_user) + "-" + str(camera_id)
-    bytes_msg = bytes(msg, encoding="utf-8")
-    selection_request = create_request(bytes_msg)
-    sel = create_socket_connection(selection_request)
-
-    # Start loop for managing connection
-    try:
-        while True:
-            events = sel.select(timeout=1)
-            for key, mask in events:
-                message = key.data
-                try:
-                    message.process_events(mask)
-                except Exception as e:
-                    logger.error("Failed to send message to handle camera due to: %s" % e)
-                    message.close()
-            # Check for a socket being monitored to continue.
-            if not sel.get_map():
-                break
-    except KeyboardInterrupt:
-        logger.error("Caught keyboard interrupt, exiting.")
-    finally:
-        sel.close()
-
-    # Create a dictionary of cameras to create camera list at home view
-    data = import_camera_list(current_user)
-
-    return render(request, "home.html", {"selected_camera":camera_id, "system_status":system_status, "data":data})
-    
-#------------------------------------------------------------------------------
-def manage_system(request, task):
-    ''' Main view for starting the camera system '''
-
-    # Current user
-    current_user = request.user.id
-
-    # Manage system status
-    if task == "start":
-        system_status = update_system_status(current_user, 1)
-    else:
-        system_status = update_system_status(current_user, 0)
-        
-    # Loop through cameras and create messages
-    selected_camera = str(DimCameras.objects.get(user_id=current_user, selected_status=1).id)
-    messages = []
-    cameras = DimCameras.objects.filter(user_id=current_user, detection_status=1).values_list("id")
-    for cam in cameras:
-        messages.append(str(task) + "-" + str(current_user) + "-" + str(cam[0]))
-
-    # Start connection
-    msg = '|'.join(messages)
-    bytes_msg = bytes(msg, encoding="utf-8")
-    selection_request = create_request(bytes_msg)
-    sel = create_socket_connection(selection_request)
-
-    # Start loop for managing connection
-    try:
-        while True:
-            events = sel.select(timeout=1)
-            for key, mask in events:
-                message = key.data
-                try:
-                    message.process_events(mask)
-                except Exception as e:
-                    logger.error("Failed to send message to handle camera due to: %s" % e)
-                    message.close()
-            # Check for a socket being monitored to continue.
-            if not sel.get_map():
-                break
-    except KeyboardInterrupt:
-        logger.error("Caught keyboard interrupt, exiting.")
-    finally:
-        sel.close()
-
-    # Create a dictionary of cameras to create camera list at home view
-    camera_data = import_camera_list(current_user)
-    
-    return render(request, "home.html", {"selected_camera":selected_camera, "system_status":system_status, "data":camera_data})

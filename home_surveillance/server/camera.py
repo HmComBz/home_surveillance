@@ -1,8 +1,10 @@
+import base64
 import cv2
 import logging
 import multiprocessing as mp
 import socket
 import time
+import zmq
 from threading import Thread
 from home_surveillance.app.security import encryption
 from home_surveillance.server.mysql_conn import MysqlConnection
@@ -27,7 +29,7 @@ consoleHandler.setFormatter(formatter)
 
 class Camera(Thread):
     def __init__(self, parent, user_id, camera_id):
-        Thread.__init__(self, name=("Camera-%s" % camera_id))
+        Thread.__init__(self)
         self.camera_id = camera_id
         self.camera_data = self.import_camera_data_from_sql()
         self.img_x = 920
@@ -36,8 +38,8 @@ class Camera(Thread):
         self.fps_limit = 4
         self.latest_image = None
         self.parent = parent
-        self.user_id = user_id
         self.status = 1
+        self.user_id = user_id
 
         # Get the first frame and get the size of it
         try:
@@ -50,6 +52,10 @@ class Camera(Thread):
         except Exception as e:
             self.stopped = True
             logger.error("Error in capturing camera stream for camera %s: %s" % (self.camera_id, e))
+
+        # Message user
+        logger.info("Camera thread started for user %s and camera %s." % (self.user_id, self.camera_id))
+
 
     #-------------------------------------------------------------------------------
     def generate_rtsp(self):
@@ -67,20 +73,20 @@ class Camera(Thread):
         except Exception as e:
             logger.error("Camera %s: Generate rstp link failed under worker due to: %s" % (self.camera_id, e))
             return ""
-        
+
     #-------------------------------------------------------------------------------
     def import_camera_data_from_sql(self):
         # Import data
         try:
-            columns = ["rtsp_main", "domain", "port", "user_name", "password", "web_socket"]
+            columns = ["rtsp_main", "domain", "port", "user_name", "password"]
             table = "app_dimcameras"
             where_statements = [("id", self.camera_id)]
             return MysqlConnection().query_data(columns, table, where_statements)[0]
         except Exception as e:
             logger.error("Failed to import camera data from sql: %s" % e)
             return None
-        
-    #-------------------------------------------------------------------------------    
+
+    #-------------------------------------------------------------------------------
     def resize_image(self, image, x, y):
         ''' Resizing image to fit the video boxes on the home page '''
 
@@ -118,7 +124,7 @@ class Camera(Thread):
             logger.error("Failed to resize image under resize image: %s." % e)
 
         return new_image
-    
+
     #-------------------------------------------------------------------------------
     def run(self):
         skip_counter = 0
@@ -127,22 +133,27 @@ class Camera(Thread):
         while not self.stopped:
             # Get new frames
             time_elapsed = time.time() - prev
-            (self.grabbed, self.frame) = self.stream.read()
+            (grabbed, frame) = self.stream.read()
 
             # If time elapsed is larger than frame rate
             if time_elapsed > (1 / self.fps_limit):
                 prev = time.time()
 
                 # Check if images is OK
-                if self.grabbed:
+                if grabbed:
                     try:
-                        # Resize image and sent it through the socket
+                        # Resize image
                         if self.status == 1:
-                            self.latest_image = self.resize_image(self.frame, self.img_x, self.img_y)
+                            self.latest_image = self.resize_image(frame, self.img_x, self.img_y)
+
                     except Exception as e:
                         logger.error("Camera %s: No analyzed image was recieved under main loop: %s" % (self.camera_id, e))
+                        self.stopped = True
                 else:
                     skip_counter += 1
+
+        # Stop videofeed
+        self.stream.release()
 
     #---------------------------------------------------------------------------
     def stop(self):

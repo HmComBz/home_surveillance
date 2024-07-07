@@ -27,7 +27,7 @@
                         {% else %}
                             <p><a class="btn btn-secondary btn-lg" href="{% url 'manage_system' task='stop' %}" role="button">Stoppa</a></p>
                         {% endif %}
-                    </div> 
+                    </div>
                 </div>
                 <div class="cameras-main-box">
                     <div class="row gx-5" id="cameras-content-header">
@@ -43,15 +43,15 @@
                             </div>
                             <div class="cameras-status">
                                 {% if c.detection_status == 0 %}
-                                    <p><a class="btn btn-success btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Aktiverad</a></p>
+                                    <p><a class="btn btn-success btn-lg" href="{% url 'include_camera' camera_id=c.id %}" role="button">Aktivera</a></p>
                                 {% else %}
-                                    <p><a class="btn btn-secondary btn-lg" href="{% url 'view_camera' camera_id=c.id %}" role="button">Inaktivera</a></p>
+                                    <p><a class="btn btn-secondary btn-lg" href="{% url 'exclude_camera' camera_id=c.id %}" role="button">Inaktivera</a></p>
                                 {% endif %}
-                            </div> 
+                            </div>
                             <div class="cameras-buttons">
                                 <div class="cameras-buttons-button">
                                     <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button">Ta bort</a></p>
-                            </div>                                
+                            </div>
                                 <div class="cameras-buttons-button">
                                     <p><a class="btn btn-success btn-lg" href="{% url 'home' %}" role="button">&#9881;</a></p>
                                 </div>
@@ -69,7 +69,7 @@
                 </div>
                 <div class="video-stream-box">
                     <div class="video-stream-sub-box">
-                        {% if selected_camera|length > 0 %}
+                        {% if system_status == 1 %}
                             <img src="{% url 'camera' camera_id=selected_camera %}" id="camera_rtsp" onerror="this.style.display='none'">
                         {% else %}
                         {% endif %}
