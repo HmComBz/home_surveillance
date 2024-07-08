@@ -184,16 +184,17 @@ class Worker(mp.Process):
             # Loop through classes and check if class has been spotted within thresh or not.
             for key in self.class_statuses:
                 if self.class_statuses[key]["status"] == 1:
+                    num_active_classes += 1
                     time_diff = now - self.class_statuses[key]["timestamp"]
                     if time_diff >= self.max_time_no_spots:
-                        self.class_statuses[key]["status"] == 0
-                        logger.info("Camera %s: Max thresh no spots reached for class %s" % (self.camera_id, key))
-                else:  
-                    num_active_classes += 1
+                        self.class_statuses[key]["status"] = 0
+                        num_active_classes -= 1
+                        logger.info("Camera %s: Max thresh no spots reached for class %s" % (self.camera_id, key))                
 
             # If no class has been spotted, set global alarm level.
             if num_active_classes == 0:
                 self.alarm_status = 0
+                logger.info("Camera %s: No active classes, global alarm status set to 0." % self.camera_id)
         except Exception as e:
             logger.error("Failed to reset statuses due to: %s" % e)
 
@@ -260,7 +261,6 @@ class Worker(mp.Process):
             try:    
                 if len(final_class_list) > 0:
                     for spotted_class in final_class_list:
-                        print(spotted_class)
                         if self.class_statuses[spotted_class]["status"] == 0:
                             self.class_statuses[spotted_class]["status"] = 1
                             self.class_statuses[spotted_class]["timestamp"] = time.time()
