@@ -22,6 +22,13 @@ class DimCameras(models.Model):
     def __str__(self):
         return self.camera_name
     
+class DimClasses(models.Model):
+    yolo_id = models.IntegerField()
+    class_label = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.user
+    
 class DimPerson(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     account_type = models.CharField(max_length=30)
