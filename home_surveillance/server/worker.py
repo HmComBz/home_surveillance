@@ -61,7 +61,7 @@ class Worker(mp.Process):
         self.max_time_no_spots = 30
 
         # Results
-        self.final_class_list = []
+        self.result_class_list = []
         self.max_class_probability = 0
         self.result_image = None
 
@@ -196,12 +196,12 @@ class Worker(mp.Process):
         ''' Extract result from the results object of the YOLOv8 model '''
 
         try:
-            self.final_class_list = []
+            self.result_class_list = []
             for result in results:
                 if "(no detections)," not in result.verbose():
                     self.max_class_probability = result.boxes.conf[0].detach().item()
                     class_string = result.verbose().split(" ")[1]
-                    self.final_class_list.append(class_string[0:len(class_string)-1])
+                    self.result_class_list.append(class_string[0:len(class_string)-1])
         except Exception as e:
             logger.error("Camera %s: Unable to extract results from results object: %s" % (self.camera_id, e))
 
@@ -254,7 +254,7 @@ class Worker(mp.Process):
                 ("user_id", self.user_id),
                 ("camera_id", self.camera_id),
                 ("log_date", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                ("log_class", self.class_data[self.final_class_list[0]]["id"]),
+                ("log_class", self.class_data[self.result_class_list[0]]["id"]),
                 ("log_score", float(self.max_class_probability)),
                 ("log_num_img", 0),
                 ("log_status", 0),
@@ -365,6 +365,10 @@ class Worker(mp.Process):
             # Update alarm status, if off, set to active. If active, update timestamp.
             self.update_alarm_status()
 
+            # Check for alarms that should be set to inactive
+            if self.alarm_status == 1:
+                self.reset_statuses()
+
             # Stop the system
             self.stop_system(action)
 
@@ -392,8 +396,8 @@ class Worker(mp.Process):
     #--------------------------------------------------------------------------------
     def update_alarm_status(self):
         try:    
-            if len(self.final_class_list) > 0:
-                for spotted_class in self.final_class_list:
+            if len(self.result_class_list) > 0:
+                for spotted_class in self.result_class_list:
                     if self.class_statuses[spotted_class]["status"] == 0:
                         self.class_statuses[spotted_class]["status"] = 1
                         self.class_statuses[spotted_class]["timestamp"] = time.time()
@@ -403,8 +407,5 @@ class Worker(mp.Process):
                         logger.info("Camera %s: Status for %s set to active. User has been notified." % (self.camera_id, spotted_class))
                     else:
                         self.class_statuses[spotted_class]["timestamp"] = time.time()
-            else:
-                if self.alarm_status == 1:
-                    self.reset_statuses()
         except Exception as e:
             logger.error("Camera %s: Alarm status failed to update due to: %s" % (self.camera_id, e))
